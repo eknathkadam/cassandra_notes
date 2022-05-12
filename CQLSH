@@ -7,4 +7,11 @@ USE mykeyspace;
 CREATE TABLE PERSON (first_name text,last_name text, id text, PRIMARY KEY (id));DESCRIBE TABLE person;
 SELECT * FROM person;
 INSERT INTO person (first_name, last_name, id) VALUES ('Eknath', 'Kadam','1');
+SELECT * FROM person WHERE id='1' works fine becuase its primary key
+SELECT * FROM person WHERE name='Eknath' doesnt work
+INSERT INTO person (first_name, last_name, id) VALUES ('Eknath1', 'Kadam1', 1);
+Above statement is known as upsert, CASSANDRA WILL Update a record if the primary key exists.
+DELETE FROM person WHERE id = '1'; This is a legit statement. But cassandra wont delete from other columns
+TRUNCATE person; will delete all data from person table
+DROP TABLE person; will delete the table itself
 

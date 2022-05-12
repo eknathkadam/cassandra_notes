@@ -1,0 +1,192 @@
+No Master-Slave architechture - all nodes are homegenous
+There is no seperate config server
+Replicates data across nodes - You do tell cassandra how many copies you need
+Different nodes can be in different data centers or different continents
+Eventually consistent
+
+WHERE DOES DATA GO IN CLUSTER?
+- Depends upon the data
+- Hash Ring : Data is partioned around a ring
+- Which Node? Determined by partition key
+
+WHERE IS DATA READ FROM
+- Uses Hashring and depends upon data
+
+HOW IS THIS HIGHLY AVAILABLE?
+- Uses concept of replication
+- Replication is automatic depending the replication factor
+
+CONSISTENCY PROBLEM (Cassandra prioritzes availability over Consistency)
+
+- What happens if we read data before its completely written?
+- How many replicas report a state of data before we trust it?
+- CONSISTENCY LEVEL - One, Majority (Quorem) or All
+- Enough nodes need to be online - Affects availability
+
+Cassandra tables
+- Narrow tables
+- No joines
+- Denormalizing is okay
+- Columnar tables (?)
+- Rows representing things of a type
+- No foreign key constrains
+- Tables are distributed/splitted in different partitions
+- Connected by partition key
+- Partition-key is the column
+- Partition key is used to split the tables, and each partition connected with each node
+- A good partition key is 
+Ordering happens during insert
+Example: 
+CREATE TABLE student (
+first_name text,
+last_name text,
+email text,
+class_id int,
+roll_no int,
+PRIMARY KEY ((class_id), last_name, first_name))
+WITH CLUSTERING ORDER BY (last_name ASC, first_name DESC);
+
+
+RANGE QURIES - advantage of having primary keys/clustering columns
+SELECT * FRM student WHERE class_id = 1 and roll_no >2;
+
+IMPLICATIONS OF PARTITIONING
+- Not all data is in one node
+- More is better!
+- Problem with data being distributed - 
+
+Cassandra data types
+TEXT
+INT
+ASCII
+BIGINT
+SMALLINT
+TINYINT
+FLOAT
+DOUBLE
+BOOLEAN
+VARINT
+DATE
+TIME
+DURATION
+UUID - SURROGATE KEY
+TIMEUUID
+
+Cant hav auto-incrementing IDs in cassandra
+To insert an UUID just do uuid()
+
+create table student (
+              ... student_id UUID,
+              ... first_name text,
+              ... last_name text,
+              ... email text,
+              ... date_of_birth date,
+              ... data_added_on timestamp,
+              ... avg_score float,
+              ... roll_no int,
+              ... class_no tinyint,
+              ... is_active boolean,
+              ... primary key (class_no, roll_no)
+              ... );
+
+TIMEUUID for storing creation time stamp plus uuid
+
+cqlsh:mykeyspace> create table student_time (
+              ... student_id TIMEUUID,
+              ... class_no INT,
+              ... roll_no INT,
+              ... PRIMARY KEY (class_no, student_id));
+cqlsh:mykeyspace> select * from student_time
+              ... ;
+
+ class_no | student_id | roll_no
+----------+------------+---------
+
+(0 rows)
+cqlsh:mykeyspace> insert into student_time (student_id, class_no, roll_no) values (now(),1,9);
+cqlsh:mykeyspace> select * from student_time ;
+
+COLLECTION TYPES
+
+CREATE TABLE student_hobbies ( student_id uuid, fav_books SET<TEXT>, awards LIST<TEXT>, favs MAP<TEXT,TEXT>, primary key (student_id));
+
+insert into student_hobbies (student_id, fav_books) values (uuid(),{'catcher in the rye','grapes of wrath'});
+
+
+
+Some more concepts:
+Consistency Level 1, All, Quorum, Local Quorum, Each Quorum
+Gossi Protocol
+Replication Factor
+Partition Key Ring and Hashing function
+Suspicion
+Hinted-Handout
+Commit Log - Mem table
+
+
+WRITE PATH
+1. Time stamp is attached
+2. Write is written to commit log
+3. Write is written to a memtable (in memory table)
+4. Completion of a write
+5. Flush the data in new SSTable file from Memtable when its full
+6. Release the memory 
+7. SStables are immutable
+8. Delete and updates are new writes
+9. Deletes are tombstone writes, tombstone write come with timestamp
+10. This is why WRITES are SUPER Fast
+11. Compaction is done to compact multiple small SSTables to big SSTable
+
+Reading 
+1. Bloomfilter tells if data exists in a SSTable file or not
+2. Bloomfilter mainly eliminates the files
+3. Compaction is essential for faster reads
+4. First data is checked in Memetable and if it doesnt exist there its searched in SStables with the help of Bloomfilter
+5. Merges data based on time stamp
+6. Sends data back to coordinater node
+
+Read Repairs
+1. For certain percentage or reads
+2. Except when consistency is ALL
+
+
+CONCLUSIONS:
+1. Optimized for writes
+2. Writes are in memory
+3. Read can be a little slower
+4. Possible multiple file reads
+5. Compaction is important
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+CAP Theorm
+Consistency
+	Every read receives the most recent write or an error.
+Availability
+	Every request receives a (non-error) response, without the guarantee that it contains the most recent write.
+Partition tolerance
+	The system continues to operate despite an arbitrary number of messages being dropped (or delayed) by the network between nodes.
+
+
