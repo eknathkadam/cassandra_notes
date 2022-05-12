@@ -1,0 +1,10 @@
+DESCRIBE
+DESCRIBE CLUSTER
+DESCRIBE KEYSPACES
+SHOW VERSION
+CREATE KEYSPACE mykeyspace WITH replication = {'class':'SimpleStrategy', 'replication_factor':1};
+USE mykeyspace;
+CREATE TABLE PERSON (first_name text,last_name text, id text, PRIMARY KEY (id));DESCRIBE TABLE person;
+SELECT * FROM person;
+INSERT INTO person (first_name, last_name, id) VALUES ('Eknath', 'Kadam','1');
+
